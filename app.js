@@ -2,6 +2,21 @@ const API_BASE_URL = 'http://localhost:5000/api';
 
 let editingTransactionId = null;
 
+// Show/hide category based on type
+function updateCategoryVisibility() {
+  const typeEl = document.getElementById('type');
+  const groupEl = document.getElementById('categoryGroup');
+  const categoryEl = document.getElementById('category');
+  if (!typeEl || !groupEl || !categoryEl) return;
+  if (typeEl.value === 'expense') {
+    groupEl.style.display = '';
+    categoryEl.required = true;
+  } else {
+    groupEl.style.display = 'none';
+    categoryEl.required = false;
+  }
+}
+
 // Format currency
 function formatCurrency(amount) {
   return new Intl.NumberFormat('en-US', {
@@ -88,7 +103,9 @@ function openAddModal() {
   editingTransactionId = null;
   document.getElementById('modalTitle').textContent = 'Add Transaction';
   document.getElementById('transactionForm').reset();
+  document.getElementById('type').value = 'expense';
   document.getElementById('date').value = new Date().toISOString().split('T')[0];
+  updateCategoryVisibility();
   document.getElementById('modal').style.display = 'flex';
 }
 
@@ -115,6 +132,7 @@ async function editTransaction(id) {
     editingTransactionId = id;
     document.getElementById('modalTitle').textContent = 'Edit Transaction';
     document.getElementById('type').value = transaction.type;
+    updateCategoryVisibility();
     document.getElementById('amount').value = transaction.amount;
     document.getElementById('description').value = transaction.description;
     document.getElementById('category').value = transaction.category || '';
@@ -195,5 +213,10 @@ async function handleSubmit(event) {
 document.addEventListener('DOMContentLoaded', () => {
   fetchTransactions();
   fetchSummary();
+  const typeEl = document.getElementById('type');
+  if (typeEl) {
+    typeEl.addEventListener('change', updateCategoryVisibility);
+  }
+  updateCategoryVisibility();
 });
 

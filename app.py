@@ -12,6 +12,9 @@ CORS(app)
 DATA_DIR = Path('data')
 DATA_FILE = DATA_DIR / 'transactions.json'
 
+# Allowed categories for expenses
+ALLOWED_CATEGORIES = {'Food', 'Rent', 'Travel', 'Misc'}
+
 # Ensure data directory exists
 DATA_DIR.mkdir(exist_ok=True)
 
@@ -107,6 +110,15 @@ def create_transaction():
         if float(amount) <= 0:
             return jsonify({'error': 'Amount must be greater than 0'}), 400
         
+        # Category validation: required for expenses, ignored for income
+        if type_val == 'expense':
+            if not category:
+                return jsonify({'error': 'Category is required for expenses'}), 400
+            if category not in ALLOWED_CATEGORIES:
+                return jsonify({'error': f'Category must be one of {sorted(ALLOWED_CATEGORIES)}'}), 400
+        else:
+            category = None
+        
         transactions = read_transactions()
         
         new_transaction = {
@@ -147,6 +159,15 @@ def update_transaction(transaction_id):
         
         if float(amount) <= 0:
             return jsonify({'error': 'Amount must be greater than 0'}), 400
+        
+        # Category validation: required for expenses, ignored for income
+        if type_val == 'expense':
+            if not category:
+                return jsonify({'error': 'Category is required for expenses'}), 400
+            if category not in ALLOWED_CATEGORIES:
+                return jsonify({'error': f'Category must be one of {sorted(ALLOWED_CATEGORIES)}'}), 400
+        else:
+            category = None
         
         transactions = read_transactions()
         
@@ -195,7 +216,7 @@ def get_summary():
         month = request.args.get('month')
         year = request.args.get('year')
         
-        filtered = filter_transactions(transactions, month=month, year=year)
+        filtered = filter_transactions(transactions, None, month, year)
         
         total_income = sum(t['amount'] for t in filtered if t['type'] == 'income')
         total_expenses = sum(t['amount'] for t in filtered if t['type'] == 'expense')
