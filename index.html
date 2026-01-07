@@ -4,43 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SplitCash - Expense & Income Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>💰 SplitCash</h1>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <span class="logo-icon">💸</span>
+                <span>SplitCash</span>
+            </a>
+            <button class="btn btn-orange" onclick="openAddModal()">+ Add expense</button>
+        </div>
+    </header>
 
-        <div class="summary-grid">
-            <div class="summary-card">
-                <div class="summary-label">Total Income</div>
-                <div class="summary-value summary-income" id="totalIncome">$0.00</div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-label">Total Expenses</div>
-                <div class="summary-value summary-expense" id="totalExpenses">$0.00</div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-label">Balance</div>
-                <div class="summary-value summary-balance" id="balance">$0.00</div>
+    <div class="container">
+        <!-- Summary Section -->
+        <div class="summary-section">
+            <div class="summary-header">Your Balance</div>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Total Income</div>
+                    <div class="summary-value summary-income" id="totalIncome">$0.00</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Expenses</div>
+                    <div class="summary-value summary-expense" id="totalExpenses">$0.00</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Balance</div>
+                    <div class="summary-value summary-balance" id="balance">$0.00</div>
+                </div>
             </div>
         </div>
 
+        <!-- Transactions -->
         <div class="card">
             <div class="card-header">
-                <h2>Transactions</h2>
-                <button class="btn btn-primary" onclick="openAddModal()">➕ Add Transaction</button>
+                <h2>Recent Activity</h2>
             </div>
 
-            <div id="loading" style="text-align: center; padding: 2rem; color: #6b7280; display: none;">
-                Loading...
+            <div id="loading" class="loading" style="display: none;">
+                Loading transactions...
             </div>
 
             <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">📝</div>
                 <h3>No transactions yet</h3>
-                <p>Add your first expense or income to get started!</p>
+                <p>Add your first expense or income to get started tracking!</p>
             </div>
 
-            <div id="transactionsList"></div>
+            <div id="transactionsList" class="transaction-list"></div>
         </div>
     </div>
 
@@ -48,53 +65,52 @@
     <div id="modal" class="modal" onclick="closeModal(event)" style="display: none;">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <h2 id="modalTitle">Add Transaction</h2>
-                <button class="close-btn" onclick="closeModal()">×</button>
+                <h2 id="modalTitle">Add an expense</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
             </div>
-            <form id="transactionForm" onsubmit="handleSubmit(event)">
-                <div class="input-group">
-                    <label>Type</label>
-                    <select id="type" required>
-                        <option value="expense">Expense</option>
-                        <option value="income">Income</option>
-                    </select>
-                </div>
-
-                <div class="form-row">
-                    <div class="input-group">
-                        <label>Amount</label>
-                        <input type="number" id="amount" step="0.01" min="0.01" required>
+            <div class="modal-body">
+                <form id="transactionForm" onsubmit="handleSubmit(event)">
+                    <!-- Type Toggle -->
+                    <div class="type-toggle">
+                        <button type="button" class="type-btn expense active" id="typeExpense" onclick="setType('expense')">
+                            💸 Expense
+                        </button>
+                        <button type="button" class="type-btn income" id="typeIncome" onclick="setType('income')">
+                            💰 Income
+                        </button>
                     </div>
-                    <div class="input-group">
-                        <label>Date</label>
-                        <input type="date" id="date" required>
+                    <input type="hidden" id="type" value="expense">
+
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label>Amount</label>
+                            <input type="number" id="amount" step="0.01" min="0.01" placeholder="0.00" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Date</label>
+                            <input type="date" id="date" required>
+                        </div>
                     </div>
-                </div>
 
-                <div class="input-group">
-                    <label>Description</label>
-                    <input type="text" id="description" placeholder="e.g., Groceries, Salary, etc." required>
-                </div>
+                    <div class="input-group" id="categoryGroup">
+                        <label>Category</label>
+                        <select id="category">
+                            <option value="Food">🍔 Food</option>
+                            <option value="Rent">🏠 Rent</option>
+                            <option value="Travel">✈️ Travel</option>
+                            <option value="Misc">📦 Misc</option>
+                        </select>
+                    </div>
 
-                <div class="input-group" id="categoryGroup">
-                    <label>Category</label>
-                    <select id="category">
-                        <option value="Food">Food</option>
-                        <option value="Rent">Rent</option>
-                        <option value="Travel">Travel</option>
-                        <option value="Misc">Misc</option>
-                    </select>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary" id="submitBtn">Add Transaction</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                </div>
-            </form>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Save</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <script src="app.js"></script>
 </body>
 </html>
-

@@ -150,12 +150,11 @@ def create_transaction():
         data = request.json
         type_val = data.get('type')
         amount = data.get('amount')
-        description = data.get('description')
         category = data.get('category')
         date = data.get('date')
         
         # Validation
-        if not type_val or not amount or not description or not date:
+        if not type_val or not amount or not date:
             return jsonify({'error': 'Missing required fields'}), 400
         
         if type_val not in ['expense', 'income']:
@@ -179,7 +178,6 @@ def create_transaction():
             'id': get_next_id(transactions),
             'type': type_val,
             'amount': float(amount),
-            'description': description,
             'category': category if category else None,
             'date': date,
             'created_at': datetime.now().isoformat()
@@ -200,12 +198,11 @@ def update_transaction(transaction_id):
         data = request.json
         type_val = data.get('type')
         amount = data.get('amount')
-        description = data.get('description')
         category = data.get('category')
         date = data.get('date')
         
         # Validation
-        if not type_val or not amount or not description or not date:
+        if not type_val or not amount or not date:
             return jsonify({'error': 'Missing required fields'}), 400
         
         if type_val not in ['expense', 'income']:
@@ -231,7 +228,6 @@ def update_transaction(transaction_id):
                 transactions[i].update({
                     'type': type_val,
                     'amount': float(amount),
-                    'description': description,
                     'category': category if category else None,
                     'date': date
                 })

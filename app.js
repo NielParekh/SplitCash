@@ -2,6 +2,34 @@ const API_BASE_URL = '/api';
 
 let editingTransactionId = null;
 
+// Category icons mapping
+const categoryIcons = {
+  'Food': '🍔',
+  'Rent': '🏠',
+  'Travel': '✈️',
+  'Misc': '📦'
+};
+
+// Set transaction type (for toggle buttons)
+function setType(type) {
+  document.getElementById('type').value = type;
+  
+  // Update toggle button styles
+  const expenseBtn = document.getElementById('typeExpense');
+  const incomeBtn = document.getElementById('typeIncome');
+  
+  expenseBtn.classList.remove('active');
+  incomeBtn.classList.remove('active');
+  
+  if (type === 'expense') {
+    expenseBtn.classList.add('active');
+  } else {
+    incomeBtn.classList.add('active');
+  }
+  
+  updateCategoryVisibility();
+}
+
 // Show/hide category based on type
 function updateCategoryVisibility() {
   const typeEl = document.getElementById('type');
@@ -28,7 +56,7 @@ function formatCurrency(amount) {
 // Format date
 function formatDate(dateString) {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 // Fetch transactions
@@ -73,26 +101,34 @@ async function fetchSummary() {
   }
 }
 
+// Get icon for transaction
+function getTransactionIcon(transaction) {
+  if (transaction.type === 'income') {
+    return '💰';
+  }
+  return categoryIcons[transaction.category] || '💸';
+}
+
 // Render transactions
 function renderTransactions(transactions) {
   const listEl = document.getElementById('transactionsList');
   listEl.innerHTML = transactions.map(transaction => `
     <div class="transaction-item">
+      <div class="transaction-icon ${transaction.type}">
+        ${getTransactionIcon(transaction)}
+      </div>
       <div class="transaction-info">
-        <div class="transaction-description">${transaction.description}</div>
+        <div class="transaction-description">${transaction.category || (transaction.type === 'income' ? 'Income' : 'Expense')}</div>
         <div class="transaction-meta">
           <span>${formatDate(transaction.date)}</span>
-          ${transaction.category ? `<span>• ${transaction.category}</span>` : ''}
         </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <span class="transaction-amount ${transaction.type === 'income' ? 'amount-income' : 'amount-expense'}">
-          ${transaction.type === 'income' ? '+' : '-'}${formatCurrency(transaction.amount)}
-        </span>
-        <div class="actions">
-          <button class="icon-btn" onclick="editTransaction(${transaction.id})" title="Edit">✏️</button>
-          <button class="icon-btn danger" onclick="deleteTransaction(${transaction.id})" title="Delete">🗑️</button>
-        </div>
+      <span class="transaction-amount ${transaction.type === 'income' ? 'amount-income' : 'amount-expense'}">
+        ${transaction.type === 'income' ? '+' : '-'}${formatCurrency(transaction.amount)}
+      </span>
+      <div class="transaction-actions">
+        <button class="icon-btn" onclick="editTransaction(${transaction.id})" title="Edit">✏️</button>
+        <button class="icon-btn danger" onclick="deleteTransaction(${transaction.id})" title="Delete">🗑️</button>
       </div>
     </div>
   `).join('');
@@ -101,12 +137,12 @@ function renderTransactions(transactions) {
 // Open add modal
 function openAddModal() {
   editingTransactionId = null;
-  document.getElementById('modalTitle').textContent = 'Add Transaction';
-  document.getElementById('submitBtn').textContent = 'Add Transaction';
+  document.getElementById('modalTitle').textContent = 'Add an expense';
+  document.getElementById('submitBtn').textContent = 'Save';
   document.getElementById('transactionForm').reset();
   document.getElementById('type').value = 'expense';
   document.getElementById('date').value = new Date().toISOString().split('T')[0];
-  updateCategoryVisibility();
+  setType('expense');
   document.getElementById('modal').style.display = 'flex';
 }
 
@@ -131,13 +167,12 @@ async function editTransaction(id) {
     }
     
     editingTransactionId = id;
-    document.getElementById('modalTitle').textContent = 'Edit Transaction';
-    document.getElementById('submitBtn').textContent = 'Edit Transaction';
+    document.getElementById('modalTitle').textContent = 'Edit transaction';
+    document.getElementById('submitBtn').textContent = 'Save changes';
     document.getElementById('type').value = transaction.type;
-    updateCategoryVisibility();
+    setType(transaction.type);
     document.getElementById('amount').value = transaction.amount;
-    document.getElementById('description').value = transaction.description;
-    document.getElementById('category').value = transaction.category || '';
+    document.getElementById('category').value = transaction.category || 'Misc';
     document.getElementById('date').value = transaction.date;
     document.getElementById('modal').style.display = 'flex';
   } catch (error) {
@@ -177,7 +212,6 @@ async function handleSubmit(event) {
   const formData = {
     type: document.getElementById('type').value,
     amount: parseFloat(document.getElementById('amount').value),
-    description: document.getElementById('description').value,
     category: document.getElementById('category').value,
     date: document.getElementById('date').value,
   };
@@ -215,10 +249,4 @@ async function handleSubmit(event) {
 document.addEventListener('DOMContentLoaded', () => {
   fetchTransactions();
   fetchSummary();
-  const typeEl = document.getElementById('type');
-  if (typeEl) {
-    typeEl.addEventListener('change', updateCategoryVisibility);
-  }
-  updateCategoryVisibility();
 });
-
