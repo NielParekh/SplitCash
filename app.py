@@ -1,12 +1,42 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import json
 import os
+import logging
+from logging.handlers import RotatingFileHandler
 from datetime import datetime
 from pathlib import Path
 
 app = Flask(__name__)
 CORS(app)
+
+# Logging (writes to logs/splitcash.log)
+LOGS_DIR = Path('logs')
+LOGS_DIR.mkdir(exist_ok=True)
+LOG_FILE = LOGS_DIR / 'splitcash.log'
+
+# Clear log file on server start
+if LOG_FILE.exists():
+    LOG_FILE.unlink()
+
+file_handler = RotatingFileHandler(LOG_FILE, maxBytes=1_000_000, backupCount=5, encoding='utf-8')
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s'))
+
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s'))
+
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+root_logger.addHandler(file_handler)
+root_logger.addHandler(console_handler)
+
+# Ensure Flask + Werkzeug (dev server) logs also go to the same file
+app.logger.handlers = []
+app.logger.propagate = True
+logging.getLogger('werkzeug').handlers = []
+logging.getLogger('werkzeug').propagate = True
 
 # Data directory and file
 DATA_DIR = Path('data')
@@ -63,6 +93,30 @@ def filter_transactions(transactions, type_filter=None, month=None, year=None):
     
     return filtered
 
+
+# Serve only specific static files (security: don't expose entire directory)
+ALLOWED_STATIC_FILES = {'index.html', 'styles.css', 'app.js'}
+
+@app.route('/')
+def index():
+    return send_from_directory(app.root_path, 'index.html')
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    """Serve only whitelisted static files"""
+    if filename in ALLOWED_STATIC_FILES:
+        return send_from_directory(app.root_path, filename)
+    return jsonify({'error': 'Not found'}), 404
+
+# Basic request logging
+@app.before_request
+def log_request():
+    logging.getLogger('request').info('%s %s', request.method, request.path)
+
+@app.after_request
+def log_response(response):
+    logging.getLogger('response').info('%s %s -> %s', request.method, request.path, response.status_code)
+    return response
 
 # API Routes
 
@@ -139,9 +193,9 @@ def create_transaction():
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/api/transactions/<int:transaction_id>', methods=['PUT'])
+@app.route('/api/transactions/<int:transaction_id>', methods=['PATCH'])
 def update_transaction(transaction_id):
-    """Update an existing transaction"""
+    """Update an existing transaction (partial update)"""
     try:
         data = request.json
         type_val = data.get('type')

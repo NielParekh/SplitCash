@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = '/api';
 
 let editingTransactionId = null;
 
@@ -102,6 +102,7 @@ function renderTransactions(transactions) {
 function openAddModal() {
   editingTransactionId = null;
   document.getElementById('modalTitle').textContent = 'Add Transaction';
+  document.getElementById('submitBtn').textContent = 'Add Transaction';
   document.getElementById('transactionForm').reset();
   document.getElementById('type').value = 'expense';
   document.getElementById('date').value = new Date().toISOString().split('T')[0];
@@ -131,6 +132,7 @@ async function editTransaction(id) {
     
     editingTransactionId = id;
     document.getElementById('modalTitle').textContent = 'Edit Transaction';
+    document.getElementById('submitBtn').textContent = 'Edit Transaction';
     document.getElementById('type').value = transaction.type;
     updateCategoryVisibility();
     document.getElementById('amount').value = transaction.amount;
@@ -185,7 +187,7 @@ async function handleSubmit(event) {
       ? `${API_BASE_URL}/transactions/${editingTransactionId}`
       : `${API_BASE_URL}/transactions`;
     
-    const method = editingTransactionId ? 'PUT' : 'POST';
+    const method = editingTransactionId ? 'PATCH' : 'POST';
     
     const response = await fetch(url, {
       method,
