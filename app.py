@@ -1,0 +1,215 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import json
+import os
+from datetime import datetime
+from pathlib import Path
+
+app = Flask(__name__)
+CORS(app)
+
+# Data directory and file
+DATA_DIR = Path('data')
+DATA_FILE = DATA_DIR / 'transactions.json'
+
+# Ensure data directory exists
+DATA_DIR.mkdir(exist_ok=True)
+
+# Initialize empty transactions file if it doesn't exist
+if not DATA_FILE.exists():
+    with open(DATA_FILE, 'w') as f:
+        json.dump([], f)
+
+
+def read_transactions():
+    """Read all transactions from JSON file"""
+    try:
+        with open(DATA_FILE, 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+
+def write_transactions(transactions):
+    """Write transactions to JSON file"""
+    with open(DATA_FILE, 'w') as f:
+        json.dump(transactions, f, indent=2)
+
+
+def get_next_id(transactions):
+    """Get the next available ID"""
+    if not transactions:
+        return 1
+    return max(t['id'] for t in transactions) + 1
+
+
+def filter_transactions(transactions, type_filter=None, month=None, year=None):
+    """Filter transactions based on criteria"""
+    filtered = transactions
+    
+    if type_filter:
+        filtered = [t for t in filtered if t['type'] == type_filter]
+    
+    if year and month:
+        filtered = [t for t in filtered if 
+                   datetime.strptime(t['date'], '%Y-%m-%d').year == int(year) and
+                   datetime.strptime(t['date'], '%Y-%m-%d').month == int(month)]
+    elif year:
+        filtered = [t for t in filtered if 
+                   datetime.strptime(t['date'], '%Y-%m-%d').year == int(year)]
+    
+    return filtered
+
+
+# API Routes
+
+@app.route('/api/transactions', methods=['GET'])
+def get_transactions():
+    """Get all transactions with optional filters"""
+    try:
+        transactions = read_transactions()
+        
+        type_filter = request.args.get('type')
+        month = request.args.get('month')
+        year = request.args.get('year')
+        
+        filtered = filter_transactions(transactions, type_filter, month, year)
+        
+        # Sort by date descending, then by created_at descending
+        filtered.sort(key=lambda x: (
+            x['date'],
+            x.get('created_at', '')
+        ), reverse=True)
+        
+        return jsonify(filtered)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/transactions', methods=['POST'])
+def create_transaction():
+    """Create a new transaction"""
+    try:
+        data = request.json
+        type_val = data.get('type')
+        amount = data.get('amount')
+        description = data.get('description')
+        category = data.get('category')
+        date = data.get('date')
+        
+        # Validation
+        if not type_val or not amount or not description or not date:
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        if type_val not in ['expense', 'income']:
+            return jsonify({'error': 'Type must be either "expense" or "income"'}), 400
+        
+        if float(amount) <= 0:
+            return jsonify({'error': 'Amount must be greater than 0'}), 400
+        
+        transactions = read_transactions()
+        
+        new_transaction = {
+            'id': get_next_id(transactions),
+            'type': type_val,
+            'amount': float(amount),
+            'description': description,
+            'category': category if category else None,
+            'date': date,
+            'created_at': datetime.now().isoformat()
+        }
+        
+        transactions.append(new_transaction)
+        write_transactions(transactions)
+        
+        return jsonify(new_transaction), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/transactions/<int:transaction_id>', methods=['PUT'])
+def update_transaction(transaction_id):
+    """Update an existing transaction"""
+    try:
+        data = request.json
+        type_val = data.get('type')
+        amount = data.get('amount')
+        description = data.get('description')
+        category = data.get('category')
+        date = data.get('date')
+        
+        # Validation
+        if not type_val or not amount or not description or not date:
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        if type_val not in ['expense', 'income']:
+            return jsonify({'error': 'Type must be either "expense" or "income"'}), 400
+        
+        if float(amount) <= 0:
+            return jsonify({'error': 'Amount must be greater than 0'}), 400
+        
+        transactions = read_transactions()
+        
+        # Find and update transaction
+        for i, t in enumerate(transactions):
+            if t['id'] == transaction_id:
+                transactions[i].update({
+                    'type': type_val,
+                    'amount': float(amount),
+                    'description': description,
+                    'category': category if category else None,
+                    'date': date
+                })
+                write_transactions(transactions)
+                return jsonify(transactions[i])
+        
+        return jsonify({'error': 'Transaction not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/transactions/<int:transaction_id>', methods=['DELETE'])
+def delete_transaction(transaction_id):
+    """Delete a transaction"""
+    try:
+        transactions = read_transactions()
+        
+        # Find and remove transaction
+        for i, t in enumerate(transactions):
+            if t['id'] == transaction_id:
+                transactions.pop(i)
+                write_transactions(transactions)
+                return jsonify({'success': True})
+        
+        return jsonify({'error': 'Transaction not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/summary', methods=['GET'])
+def get_summary():
+    """Get financial summary"""
+    try:
+        transactions = read_transactions()
+        
+        month = request.args.get('month')
+        year = request.args.get('year')
+        
+        filtered = filter_transactions(transactions, month=month, year=year)
+        
+        total_income = sum(t['amount'] for t in filtered if t['type'] == 'income')
+        total_expenses = sum(t['amount'] for t in filtered if t['type'] == 'expense')
+        balance = total_income - total_expenses
+        
+        return jsonify({
+            'totalIncome': total_income,
+            'totalExpenses': total_expenses,
+            'balance': balance
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
+

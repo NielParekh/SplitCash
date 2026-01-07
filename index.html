@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SplitCash - Expense & Income Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>💰 SplitCash</h1>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-label">Total Income</div>
+                <div class="summary-value summary-income" id="totalIncome">$0.00</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Total Expenses</div>
+                <div class="summary-value summary-expense" id="totalExpenses">$0.00</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Balance</div>
+                <div class="summary-value summary-balance" id="balance">$0.00</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Transactions</h2>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ Add Transaction</button>
+            </div>
+
+            <div id="loading" style="text-align: center; padding: 2rem; color: #6b7280; display: none;">
+                Loading...
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <h3>No transactions yet</h3>
+                <p>Add your first expense or income to get started!</p>
+            </div>
+
+            <div id="transactionsList"></div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal" onclick="closeModal(event)" style="display: none;">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Transaction</h2>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            <form id="transactionForm" onsubmit="handleSubmit(event)">
+                <div class="input-group">
+                    <label>Type</label>
+                    <select id="type" required>
+                        <option value="expense">Expense</option>
+                        <option value="income">Income</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Amount</label>
+                        <input type="number" id="amount" step="0.01" min="0.01" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Date</label>
+                        <input type="date" id="date" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Description</label>
+                    <input type="text" id="description" placeholder="e.g., Groceries, Salary, etc." required>
+                </div>
+
+                <div class="input-group">
+                    <label>Category (optional)</label>
+                    <input type="text" id="category" placeholder="e.g., Food, Transport, Work">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Add Transaction</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
