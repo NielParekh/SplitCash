@@ -76,7 +76,10 @@ SplitCash/
 
 ## Deployment
 
-### AWS Deployment
+### AWS EC2 Deployment (Direct)
+See [EC2_DEPLOYMENT.md](EC2_DEPLOYMENT.md) for step-by-step EC2 deployment guide with automated setup scripts.
+
+### AWS Elastic Beanstalk
 See [DEPLOYMENT.md](DEPLOYMENT.md) for AWS Elastic Beanstalk deployment instructions.
 
 ### Docker Deployment
