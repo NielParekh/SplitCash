@@ -2,6 +2,8 @@
 
 This is a simplified guide for deploying SplitCash to EC2. If you encounter any issues, see the full [EC2_DEPLOYMENT.md](EC2_DEPLOYMENT.md) guide.
 
+**⚠️ IMPORTANT**: GitHub requires authentication. See [GITHUB_AUTH.md](GITHUB_AUTH.md) for detailed authentication setup.
+
 ## Prerequisites
 
 1. AWS Account
@@ -32,16 +34,76 @@ ssh -i /path/to/your-key.pem ubuntu@YOUR_PUBLIC_IP
 
 ### Step 3: Clone Repository
 
-```bash
-# Clone your repository
-git clone https://github.com/NielParekh/SplitCash.git
-cd SplitCash
+**IMPORTANT**: GitHub requires authentication. Choose one of these methods:
 
-# Make scripts executable
+#### Method A: Using Personal Access Token (Quick)
+
+1. **Create a Personal Access Token on GitHub:**
+   - Go to: https://github.com/settings/tokens
+   - Click "Generate new token" → "Generate new token (classic)"
+   - Give it a name like "EC2 Deployment"
+   - Select scopes: `repo` (full control of private repositories)
+   - Click "Generate token"
+   - **Copy the token immediately** (you won't see it again!)
+
+2. **On EC2, clone using the token:**
+   ```bash
+   # Replace YOUR_TOKEN with the token you copied
+   git clone https://YOUR_TOKEN@github.com/NielParekh/SplitCash.git
+   cd SplitCash
+   chmod +x ec2-setup.sh ec2-deploy.sh
+   ```
+
+   Or clone without the token in the URL (more secure):
+   ```bash
+   git clone https://github.com/NielParekh/SplitCash.git
+   # When prompted:
+   # Username: NielParekh
+   # Password: YOUR_PERSONAL_ACCESS_TOKEN (not your GitHub password!)
+   ```
+
+#### Method B: Using SSH Keys (Recommended for Long-term)
+
+```bash
+# Generate SSH key on EC2
+ssh-keygen -t ed25519 -C "ec2@splitcash"
+# Press Enter for default location
+# Press Enter for no passphrase (or set one)
+
+# Display the public key
+cat ~/.ssh/id_ed25519.pub
+```
+
+**Copy the output** (starts with `ssh-ed25519`), then:
+
+1. Go to GitHub: https://github.com/settings/ssh/new
+2. Title: "EC2 Server"
+3. Key: Paste the public key
+4. Click "Add SSH key"
+
+**Then clone using SSH:**
+```bash
+git clone git@github.com:NielParekh/SplitCash.git
+cd SplitCash
 chmod +x ec2-setup.sh ec2-deploy.sh
 ```
 
-**Note**: If the repository is private, you may need to set up SSH keys or use HTTPS with credentials.
+#### Method C: Copy Files via SCP (No Git Required)
+
+If authentication is too complicated, copy files directly:
+
+```bash
+# From your LOCAL machine (not on EC2):
+cd /Users/nielparekh/Desktop/SplitCash
+
+# Copy all files to EC2
+scp -i /path/to/your-key.pem -r . ubuntu@YOUR_PUBLIC_IP:/home/ubuntu/splitcash/
+
+# Then SSH back into EC2
+ssh -i /path/to/your-key.pem ubuntu@YOUR_PUBLIC_IP
+cd /home/ubuntu/splitcash
+chmod +x ec2-setup.sh ec2-deploy.sh
+```
 
 ### Step 4: Run Setup Script
 
@@ -74,13 +136,7 @@ Replace `YOUR_PUBLIC_IP` with your EC2 instance's public IP address.
 
 ### Repository Clone Fails (404 or Authentication)
 
-**Option 1: Use HTTPS with Personal Access Token**
-```bash
-# Generate a token at: https://github.com/settings/tokens
-git clone https://YOUR_TOKEN@github.com/NielParekh/SplitCash.git
-```
-
-**Option 2: Copy Files via SCP**
+This usually means you need to authenticate with GitHub. See "Step 3: Clone Repository" above for three methods.
 ```bash
 # From your local machine
 cd /Users/nielparekh/Desktop/SplitCash

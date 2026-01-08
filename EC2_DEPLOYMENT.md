@@ -154,7 +154,42 @@ exit
 
 ## Step 5: Deploy Your Application
 
-**IMPORTANT**: Always clone the repository first - don't use curl to download individual files as they may not be accessible.
+**IMPORTANT**: GitHub requires authentication for private repositories. Choose one method below.
+
+### GitHub Authentication Methods
+
+#### Method 1: Personal Access Token (Quick)
+
+1. **Create token:** https://github.com/settings/tokens
+   - Click "Generate new token" → "Generate new token (classic)"
+   - Name: "EC2 Deployment"
+   - Scope: Check `repo` (full control)
+   - Generate and copy the token
+
+2. **Clone on EC2:**
+   ```bash
+   git clone https://YOUR_TOKEN@github.com/NielParekh/SplitCash.git
+   # Or clone and paste token when prompted for password
+   ```
+
+#### Method 2: SSH Keys (Recommended)
+
+```bash
+# On EC2, generate SSH key
+ssh-keygen -t ed25519 -C "ec2@splitcash"
+cat ~/.ssh/id_ed25519.pub  # Copy this output
+
+# Add to GitHub: https://github.com/settings/ssh/new
+# Then clone:
+git clone git@github.com:NielParekh/SplitCash.git
+```
+
+#### Method 3: SCP File Transfer (No Git)
+
+From your local machine:
+```bash
+scp -i /path/to/key.pem -r . ubuntu@YOUR_PUBLIC_IP:/home/ubuntu/splitcash/
+```
 
 ### Option A: Deploy with Docker (Easiest)
 
@@ -163,8 +198,9 @@ exit
 mkdir -p /home/ubuntu/splitcash
 cd /home/ubuntu/splitcash
 
-# Clone your repository
+# Clone your repository (use one of the authentication methods above)
 git clone https://github.com/NielParekh/SplitCash.git .
+# OR: git clone git@github.com:NielParekh/SplitCash.git .
 
 # Make setup scripts executable
 chmod +x ec2-setup.sh ec2-deploy.sh
