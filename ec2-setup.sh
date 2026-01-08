@@ -88,7 +88,12 @@ sudo systemctl start splitcash
 
 # Configure nginx
 echo "🌐 Configuring nginx..."
-PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 || echo "_")
+
+# If PUBLIC_IP is empty, use default server
+if [ -z "$PUBLIC_IP" ] || [ "$PUBLIC_IP" = "" ]; then
+    PUBLIC_IP="_"
+fi
 
 sudo tee /etc/nginx/sites-available/splitcash > /dev/null <<EOF
 server {
