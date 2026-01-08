@@ -154,43 +154,6 @@ exit
 
 ## Step 5: Deploy Your Application
 
-**IMPORTANT**: GitHub requires authentication for private repositories. Choose one method below.
-
-### GitHub Authentication Methods
-
-#### Method 1: Personal Access Token (Quick)
-
-1. **Create token:** https://github.com/settings/tokens
-   - Click "Generate new token" → "Generate new token (classic)"
-   - Name: "EC2 Deployment"
-   - Scope: Check `repo` (full control)
-   - Generate and copy the token
-
-2. **Clone on EC2:**
-   ```bash
-   git clone https://YOUR_TOKEN@github.com/NielParekh/SplitCash.git
-   # Or clone and paste token when prompted for password
-   ```
-
-#### Method 2: SSH Keys (Recommended)
-
-```bash
-# On EC2, generate SSH key
-ssh-keygen -t ed25519 -C "ec2@splitcash"
-cat ~/.ssh/id_ed25519.pub  # Copy this output
-
-# Add to GitHub: https://github.com/settings/ssh/new
-# Then clone:
-git clone git@github.com:NielParekh/SplitCash.git
-```
-
-#### Method 3: SCP File Transfer (No Git)
-
-From your local machine:
-```bash
-scp -i /path/to/key.pem -r . ubuntu@YOUR_PUBLIC_IP:/home/ubuntu/splitcash/
-```
-
 ### Option A: Deploy with Docker (Easiest)
 
 ```bash
@@ -198,41 +161,20 @@ scp -i /path/to/key.pem -r . ubuntu@YOUR_PUBLIC_IP:/home/ubuntu/splitcash/
 mkdir -p /home/ubuntu/splitcash
 cd /home/ubuntu/splitcash
 
-# Clone your repository (use one of the authentication methods above)
+# Clone your repository
 git clone https://github.com/NielParekh/SplitCash.git .
-# OR: git clone git@github.com:NielParekh/SplitCash.git .
 
-# Make setup scripts executable
-chmod +x ec2-setup.sh ec2-deploy.sh
+# Or copy files using SCP from your local machine:
+# From your local machine:
+# scp -i /path/to/key.pem -r * ubuntu@YOUR_PUBLIC_IP:/home/ubuntu/splitcash/
 
-# Option 1: Use the automated setup script (recommended)
-./ec2-setup.sh
-
-# Option 2: Manual Docker setup
+# Start with Docker Compose
+cd /home/ubuntu/splitcash
 docker-compose up -d
 
 # Check if it's running
 docker ps
 docker-compose logs -f
-```
-
-### Alternative: Copy Files via SCP from Your Local Machine
-
-If you prefer to copy files directly:
-
-```bash
-# From your local machine (not on EC2):
-# Make sure you're in the SplitCash directory
-cd /Users/nielparekh/Desktop/SplitCash
-
-# Copy all files to EC2
-scp -i /path/to/key.pem -r . ubuntu@YOUR_PUBLIC_IP:/home/ubuntu/splitcash/
-
-# Then SSH into EC2
-ssh -i /path/to/key.pem ubuntu@YOUR_PUBLIC_IP
-cd /home/ubuntu/splitcash
-chmod +x ec2-setup.sh ec2-deploy.sh
-./ec2-setup.sh
 ```
 
 ### Option B: Deploy with Python (Direct)
@@ -245,11 +187,6 @@ cd /home/ubuntu/splitcash
 # Clone your repository
 git clone https://github.com/NielParekh/SplitCash.git .
 
-# Option 1: Use the automated setup script (recommended - it does everything below)
-chmod +x ec2-setup.sh
-./ec2-setup.sh
-
-# Option 2: Manual setup (if you prefer step-by-step)
 # Create virtual environment
 python3 -m venv venv
 source venv/bin/activate
