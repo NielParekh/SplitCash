@@ -1,82 +1,98 @@
-# SplitCash
+# 💸 SplitCash - Expense & Income Tracker
 
-A beautiful and modern expense and income tracking application built with Python Flask REST API and vanilla JavaScript frontend.
+A modern, dark-mode expense and income tracking application built with Flask and vanilla JavaScript.
 
 ## Features
 
-- 💰 Track expenses and income in one place
-- 📊 View summary statistics (total income, expenses, and balance)
-- ✏️ Add, edit, and delete transactions
-- 🏷️ Categorize transactions (optional)
-- 📅 Date-based transaction tracking
-- 🎨 Modern, responsive UI with gradient design
+- 📝 **Transaction Management**: Add, edit, and delete income and expenses
+- 📊 **Financial Summary**: View total income, expenses, and balance
+- 📈 **Visual Analytics**: Four interactive charts for financial insights
+  - Income vs Expenses Over Time
+  - Expenses by Category (Pie Chart)
+  - Monthly Balance Trend
+  - Category Spending Over Time
+- 🎨 **Dark Mode**: Beautiful dark theme throughout
+- 💾 **Persistent Storage**: JSON-based data storage
 
-## Getting Started
+## Quick Start
 
-### Prerequisites
+### Local Development
 
-- Python 3.7+ installed
-- pip package manager
+1. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### Installation
+2. **Run the application:**
+   ```bash
+   python app.py
+   ```
 
-1. Install Python dependencies:
+3. **Open in browser:**
+   ```
+   http://localhost:5000
+   ```
+
+### Docker
+
+**Using Docker Compose (Recommended):**
 ```bash
-pip install -r requirements.txt
+docker-compose up -d
 ```
 
-2. Start the Flask backend server:
+**Using Docker directly:**
 ```bash
-python app.py
+docker build -t splitcash:latest .
+docker run -d -p 8000:8000 \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/logs:/app/logs \
+  splitcash:latest
 ```
 
-The server will start on `http://localhost:5000`
-
-3. Open `index.html` in your browser, or serve it with a simple HTTP server:
-```bash
-# Using Python's built-in server
-python -m http.server 8000
-```
-
-Then open [http://localhost:8000](http://localhost:8000) in your browser.
-
-## Usage
-
-- Click "Add Transaction" to record a new expense or income
-- View your financial summary at the top of the page
-- Edit or delete transactions using the action buttons
-- All data is stored locally in a JSON file (`data/transactions.json`)
-
-## API Endpoints
-
-### Transactions
-- `GET /api/transactions` - Get all transactions (optional query params: `?type=expense&year=2024&month=01`)
-- `POST /api/transactions` - Create a new transaction
-- `PUT /api/transactions/<id>` - Update a transaction
-- `DELETE /api/transactions/<id>` - Delete a transaction
-
-### Summary
-- `GET /api/summary` - Get financial summary (optional query params: `?year=2024&month=01`)
-
-## Tech Stack
-
-- **Python Flask** - REST API backend
-- **Vanilla JavaScript** - Frontend
-- **JSON File Storage** - Local data persistence
-- **HTML/CSS** - Modern, responsive UI
+Access at `http://localhost:8000`
 
 ## Project Structure
 
 ```
 SplitCash/
-├── app.py                 # Flask backend server
-├── index.html             # Frontend HTML
-├── app.js                 # Frontend JavaScript
-├── styles.css             # Frontend styles
-├── requirements.txt       # Python dependencies
-└── data/
-    └── transactions.json  # JSON database (auto-created)
+├── app.py              # Flask backend
+├── app.js              # Frontend JavaScript
+├── index.html          # Main HTML template
+├── styles.css          # Dark mode styling
+├── requirements.txt    # Python dependencies
+├── Dockerfile          # Docker configuration
+├── docker-compose.yml  # Docker Compose setup
+├── data/               # Transaction data (JSON)
+└── logs/               # Application logs
 ```
+
+## API Endpoints
+
+- `GET /api/transactions` - Get all transactions
+- `POST /api/transactions` - Create new transaction
+- `PATCH /api/transactions/<id>` - Update transaction
+- `DELETE /api/transactions/<id>` - Delete transaction
+- `GET /api/summary` - Get financial summary
+
+## Deployment
+
+### AWS Deployment
+See [DEPLOYMENT.md](DEPLOYMENT.md) for AWS Elastic Beanstalk deployment instructions.
+
+### Docker Deployment
+See [DOCKER.md](DOCKER.md) for Docker deployment options including:
+- AWS ECS/Fargate
+- Google Cloud Run
+- Azure Container Instances
+- DigitalOcean App Platform
+- Heroku
+
+## Technologies Used
+
+- **Backend**: Flask (Python)
+- **Frontend**: Vanilla JavaScript, HTML5, CSS3
+- **Charts**: Chart.js
+- **Production Server**: Gunicorn
 
 ## License
 

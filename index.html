@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -41,23 +42,76 @@
             </div>
         </div>
 
-        <!-- Transactions -->
-        <div class="card">
-            <div class="card-header">
-                <h2>Recent Activity</h2>
-            </div>
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('transactions')">📝 Transactions</button>
+            <button class="tab-btn" onclick="switchTab('stats')">📊 Stats</button>
+        </div>
 
-            <div id="loading" class="loading" style="display: none;">
-                Loading transactions...
-            </div>
+        <!-- Transactions Tab -->
+        <div id="transactionsTab" class="tab-content active">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Recent Activity</h2>
+                </div>
 
-            <div id="emptyState" class="empty-state" style="display: none;">
-                <div class="empty-state-icon">📝</div>
-                <h3>No transactions yet</h3>
-                <p>Add your first expense or income to get started tracking!</p>
-            </div>
+                <div id="loading" class="loading" style="display: none;">
+                    Loading transactions...
+                </div>
 
-            <div id="transactionsList" class="transaction-list"></div>
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">📝</div>
+                    <h3>No transactions yet</h3>
+                    <p>Add your first expense or income to get started tracking!</p>
+                </div>
+
+                <div id="transactionsList" class="transaction-list"></div>
+            </div>
+        </div>
+
+        <!-- Stats Tab -->
+        <div id="statsTab" class="tab-content">
+            <div class="stats-container">
+                <!-- Chart 1: Income vs Expenses Over Time -->
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h2>Income vs Expenses Over Time</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="incomeExpensesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Expenses by Category -->
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h2>Expenses by Category</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 3: Monthly Balance Trend -->
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h2>Monthly Balance Trend</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="balanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 4: Category Spending Over Time -->
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h2>Category Spending Over Time</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="categoryTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
