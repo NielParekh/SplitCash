@@ -173,6 +173,25 @@ rsync -avz -e "ssh -i /path/to/key.pem" \
 
 ## Troubleshooting
 
+### ⚠️ SECURITY WARNING: Token Exposed in Terminal
+
+If you see your token in terminal history or logs:
+
+1. **Immediately revoke the token:**
+   - Go to: https://github.com/settings/tokens
+   - Find the exposed token
+   - Click "Revoke"
+   
+2. **Create a new token** with the same permissions
+
+3. **Clear terminal history** (if sensitive):
+   ```bash
+   history -c  # Clear current session
+   # Or edit ~/.bash_history to remove the line
+   ```
+
+4. **Never commit tokens to code** or share them publicly
+
 ### "Invalid username or token" Error
 
 This means you're using a password instead of a token, or the token is incorrect.
@@ -181,6 +200,50 @@ This means you're using a password instead of a token, or the token is incorrect
 1. Make sure you're using a **Personal Access Token**, not your GitHub password
 2. Regenerate the token if needed
 3. Check that the token has `repo` scope enabled
+
+### "Write access to repository not granted" (403 Error)
+
+This means the token doesn't have the correct permissions.
+
+**Solutions:**
+
+1. **Check Token Scopes:**
+   - Go to: https://github.com/settings/tokens
+   - Click on your token
+   - Ensure `repo` scope is checked (this gives full repository access)
+   - If not, you need to create a new token with `repo` scope
+
+2. **Try Different URL Format:**
+   ```bash
+   # Instead of this:
+   git clone https://TOKEN@github.com/username/repo.git
+   
+   # Try this format:
+   git clone https://username:TOKEN@github.com/username/repo.git
+   ```
+   
+   Or clone first, then authenticate:
+   ```bash
+   git clone https://github.com/NielParekh/SplitCash.git
+   # When prompted:
+   # Username: NielParekh
+   # Password: YOUR_TOKEN
+   ```
+
+3. **Use Fine-Grained Token (If Available):**
+   - Go to: https://github.com/settings/tokens?type=beta
+   - Create a fine-grained token
+   - Give it "Repository access" → "Only select repositories" → Select "SplitCash"
+   - Permissions → Contents: Read and write
+   - Permissions → Metadata: Read-only
+
+4. **Alternative: Use SSH Keys Instead** (Recommended)
+   - SSH keys are more secure and don't have permission issues
+   - See "Method 2: SSH Keys" above
+   
+5. **Last Resort: Use SCP File Transfer**
+   - No Git authentication needed
+   - See "Method 3: SCP File Transfer" above
 
 ### "Permission denied (publickey)" Error
 
