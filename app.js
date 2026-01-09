@@ -1,4 +1,5 @@
-const API_BASE_URL = '/api';
+// GraphQL endpoint
+const GRAPHQL_URL = '/graphql';
 
 let editingTransactionId = null;
 let charts = {
@@ -7,6 +8,97 @@ let charts = {
   balance: null,
   categoryTrend: null
 };
+
+// GraphQL query helper
+async function graphqlQuery(query, variables = {}) {
+  try {
+    const response = await fetch(GRAPHQL_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query, variables }),
+    });
+    
+    const result = await response.json();
+    
+    if (result.errors) {
+      throw new Error(result.errors[0].message);
+    }
+    
+    return result.data;
+  } catch (error) {
+    console.error('GraphQL error:', error);
+    throw error;
+  }
+}
+
+// GraphQL Queries and Mutations
+const GET_TRANSACTIONS_QUERY = `
+  query GetTransactions($filters: TransactionFilters) {
+    transactions(filters: $filters) {
+      id
+      type
+      amount
+      category
+      date
+      created_at
+    }
+  }
+`;
+
+const GET_SUMMARY_QUERY = `
+  query GetSummary($month: Int, $year: Int) {
+    summary(month: $month, year: $year) {
+      totalIncome
+      totalExpenses
+      balance
+    }
+  }
+`;
+
+const CREATE_TRANSACTION_MUTATION = `
+  mutation CreateTransaction($input: TransactionInput!) {
+    createTransaction(input: $input) {
+      success
+      error
+      transaction {
+        id
+        type
+        amount
+        category
+        date
+        created_at
+      }
+    }
+  }
+`;
+
+const UPDATE_TRANSACTION_MUTATION = `
+  mutation UpdateTransaction($id: Int!, $input: TransactionInput!) {
+    updateTransaction(id: $id, input: $input) {
+      success
+      error
+      transaction {
+        id
+        type
+        amount
+        category
+        date
+        created_at
+      }
+    }
+  }
+`;
+
+const DELETE_TRANSACTION_MUTATION = `
+  mutation DeleteTransaction($id: Int!) {
+    deleteTransaction(id: $id) {
+      success
+      error
+    }
+  }
+`;
 
 // Category icons mapping
 const categoryIcons = {
@@ -65,14 +157,14 @@ function formatDate(dateString) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// Fetch transactions
+// Fetch transactions using GraphQL
 async function fetchTransactions() {
   try {
     document.getElementById('loading').style.display = 'block';
     document.getElementById('emptyState').style.display = 'none';
     
-    const response = await fetch(`${API_BASE_URL}/transactions`);
-    const transactions = await response.json();
+    const data = await graphqlQuery(GET_TRANSACTIONS_QUERY);
+    const transactions = data.transactions || [];
     
     document.getElementById('loading').style.display = 'none';
     
@@ -86,15 +178,15 @@ async function fetchTransactions() {
   } catch (error) {
     console.error('Error fetching transactions:', error);
     document.getElementById('loading').style.display = 'none';
-    alert('Failed to load transactions');
+    alert('Failed to load transactions: ' + error.message);
   }
 }
 
-// Fetch summary
+// Fetch summary using GraphQL
 async function fetchSummary() {
   try {
-    const response = await fetch(`${API_BASE_URL}/summary`);
-    const summary = await response.json();
+    const data = await graphqlQuery(GET_SUMMARY_QUERY);
+    const summary = data.summary;
     
     document.getElementById('totalIncome').textContent = formatCurrency(summary.totalIncome);
     document.getElementById('totalExpenses').textContent = formatCurrency(summary.totalExpenses);
@@ -160,11 +252,11 @@ function closeModal(event) {
   }
 }
 
-// Edit transaction
+// Edit transaction using GraphQL
 async function editTransaction(id) {
   try {
-    const response = await fetch(`${API_BASE_URL}/transactions`);
-    const transactions = await response.json();
+    const data = await graphqlQuery(GET_TRANSACTIONS_QUERY);
+    const transactions = data.transactions || [];
     const transaction = transactions.find(t => t.id === id);
     
     if (!transaction) {
@@ -183,22 +275,20 @@ async function editTransaction(id) {
     document.getElementById('modal').style.display = 'flex';
   } catch (error) {
     console.error('Error loading transaction:', error);
-    alert('Failed to load transaction');
+    alert('Failed to load transaction: ' + error.message);
   }
 }
 
-// Delete transaction
+// Delete transaction using GraphQL
 async function deleteTransaction(id) {
   if (!confirm('Are you sure you want to delete this transaction?')) {
     return;
   }
   
   try {
-    const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
-      method: 'DELETE',
-    });
+    const data = await graphqlQuery(DELETE_TRANSACTION_MUTATION, { id });
     
-    if (response.ok) {
+    if (data.deleteTransaction.success) {
       await fetchTransactions();
       await fetchSummary();
       // Refresh stats if stats tab is active
@@ -206,20 +296,19 @@ async function deleteTransaction(id) {
         await loadStats();
       }
     } else {
-      const error = await response.json();
-      alert(error.error || 'Failed to delete transaction');
+      alert(data.deleteTransaction.error || 'Failed to delete transaction');
     }
   } catch (error) {
     console.error('Error deleting transaction:', error);
-    alert('Failed to delete transaction');
+    alert('Failed to delete transaction: ' + error.message);
   }
 }
 
-// Handle form submit
+// Handle form submit using GraphQL
 async function handleSubmit(event) {
   event.preventDefault();
   
-  const formData = {
+  const input = {
     type: document.getElementById('type').value,
     amount: parseFloat(document.getElementById('amount').value),
     category: document.getElementById('category').value,
@@ -227,35 +316,41 @@ async function handleSubmit(event) {
   };
   
   try {
-    const url = editingTransactionId 
-      ? `${API_BASE_URL}/transactions/${editingTransactionId}`
-      : `${API_BASE_URL}/transactions`;
+    let data;
     
-    const method = editingTransactionId ? 'PATCH' : 'POST';
+    if (editingTransactionId) {
+      // Update transaction
+      data = await graphqlQuery(UPDATE_TRANSACTION_MUTATION, {
+        id: editingTransactionId,
+        input: input
+      });
+      
+      if (!data.updateTransaction.success) {
+        alert(data.updateTransaction.error || 'Failed to update transaction');
+        return;
+      }
+    } else {
+      // Create transaction
+      data = await graphqlQuery(CREATE_TRANSACTION_MUTATION, {
+        input: input
+      });
+      
+      if (!data.createTransaction.success) {
+        alert(data.createTransaction.error || 'Failed to create transaction');
+        return;
+      }
+    }
     
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData),
-    });
-    
-    if (response.ok) {
       await fetchTransactions();
       await fetchSummary();
-      // Refresh stats if stats tab is active
-      if (document.getElementById('statsTab').classList.contains('active')) {
-        await loadStats();
-      }
-      closeModal();
-    } else {
-      const error = await response.json();
-      alert(error.error || 'Failed to save transaction');
+    // Refresh stats if stats tab is active
+    if (document.getElementById('statsTab').classList.contains('active')) {
+      await loadStats();
     }
+    closeModal();
   } catch (error) {
     console.error('Error saving transaction:', error);
-    alert('Failed to save transaction');
+    alert('Failed to save transaction: ' + error.message);
   }
 }
 
@@ -282,11 +377,11 @@ function switchTab(tabName) {
   }
 }
 
-// Load and render all stats charts
+// Load and render all stats charts using GraphQL
 async function loadStats() {
   try {
-    const response = await fetch(`${API_BASE_URL}/transactions`);
-    const transactions = await response.json();
+    const data = await graphqlQuery(GET_TRANSACTIONS_QUERY);
+    const transactions = data.transactions || [];
     
     if (transactions.length === 0) {
       // Show empty state for charts

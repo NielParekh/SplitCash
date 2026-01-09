@@ -1,11 +1,13 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+from flask_graphql import GraphQLView
 import json
 import os
 import logging
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
 from pathlib import Path
+from schema import schema
 
 app = Flask(__name__)
 CORS(app)
@@ -118,7 +120,18 @@ def log_response(response):
     logging.getLogger('response').info('%s %s -> %s', request.method, request.path, response.status_code)
     return response
 
-# API Routes
+# GraphQL Endpoint
+app.add_url_rule(
+    '/graphql',
+    view_func=GraphQLView.as_view(
+        'graphql',
+        schema=schema,
+        graphiql=True  # Enable GraphiQL IDE for testing
+    )
+)
+
+# Legacy REST API Routes (kept for backward compatibility)
+# These can be removed after frontend is fully migrated to GraphQL
 
 @app.route('/api/transactions', methods=['GET'])
 def get_transactions():
