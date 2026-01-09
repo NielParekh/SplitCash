@@ -339,15 +339,15 @@ function renderIncomeExpensesChart(transactions) {
       datasets: [{
         label: 'Income',
         data: sortedMonths.map(m => monthlyData[m].income),
-        borderColor: '#5BC5A7',
-        backgroundColor: 'rgba(91, 197, 167, 0.2)',
+        borderColor: '#FCB116',
+        backgroundColor: 'rgba(252, 177, 22, 0.2)',
         tension: 0.4,
         fill: true
       }, {
         label: 'Expenses',
         data: sortedMonths.map(m => monthlyData[m].expenses),
-        borderColor: '#FF652F',
-        backgroundColor: 'rgba(255, 101, 47, 0.2)',
+        borderColor: '#FF7623',
+        backgroundColor: 'rgba(255, 118, 35, 0.2)',
         tension: 0.4,
         fill: true
       }]
@@ -355,22 +355,22 @@ function renderIncomeExpensesChart(transactions) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      color: '#b0b0b0',
+      color: '#FCB116',
       plugins: {
         legend: {
           position: 'top',
           labels: {
-            color: '#b0b0b0'
+            color: '#FCB116'
           }
         },
         tooltip: {
           mode: 'index',
           intersect: false,
-          backgroundColor: '#2a2a2a',
-          titleColor: '#e0e0e0',
-          bodyColor: '#b0b0b0',
-          borderColor: '#3a3a3a',
-          borderWidth: 1,
+          backgroundColor: '#121826',
+          titleColor: '#FCB116',
+          bodyColor: '#e0e0e0',
+          borderColor: '#FCB116',
+          borderWidth: 2,
           callbacks: {
             label: function(context) {
               return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
@@ -381,22 +381,22 @@ function renderIncomeExpensesChart(transactions) {
       scales: {
         x: {
           ticks: {
-            color: '#888'
+            color: '#FCB116'
           },
           grid: {
-            color: '#2a2a2a'
+            color: 'rgba(252, 177, 22, 0.1)'
           }
         },
         y: {
           beginAtZero: true,
           ticks: {
-            color: '#888',
+            color: '#FCB116',
             callback: function(value) {
               return '$' + value.toFixed(0);
             }
           },
           grid: {
-            color: '#2a2a2a'
+            color: 'rgba(252, 177, 22, 0.1)'
           }
         }
       }
@@ -425,10 +425,10 @@ function renderCategoryChart(transactions) {
   }
   
   const colors = {
-    'Food': '#FF652F',
-    'Rent': '#5BC5A7',
-    'Travel': '#4A90E2',
-    'Misc': '#9B59B6'
+    'Food': '#FF7623',
+    'Rent': '#FCB116',
+    'Travel': '#02458D',
+    'Misc': '#FF7623'
   };
   
   charts.category = new Chart(ctx, {
@@ -439,26 +439,26 @@ function renderCategoryChart(transactions) {
         data: amounts,
         backgroundColor: categories.map(c => colors[c] || '#95a5a6'),
         borderWidth: 2,
-        borderColor: '#1e1e1e'
+        borderColor: '#02458D'
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      color: '#b0b0b0',
+      color: '#FCB116',
       plugins: {
         legend: {
           position: 'bottom',
           labels: {
-            color: '#b0b0b0'
+            color: '#FCB116'
           }
         },
         tooltip: {
-          backgroundColor: '#2a2a2a',
-          titleColor: '#e0e0e0',
-          bodyColor: '#b0b0b0',
-          borderColor: '#3a3a3a',
-          borderWidth: 1,
+          backgroundColor: '#121826',
+          titleColor: '#FCB116',
+          bodyColor: '#e0e0e0',
+          borderColor: '#FCB116',
+          borderWidth: 2,
           callbacks: {
             label: function(context) {
               const label = context.label || '';
@@ -517,7 +517,7 @@ function renderBalanceChart(transactions) {
       datasets: [{
         label: 'Balance',
         data: balances,
-        borderColor: '#5BC5A7',
+        borderColor: '#02458D',
         backgroundColor: function(context) {
           const chart = context.chart;
           const {ctx, chartArea} = chart;
@@ -525,8 +525,8 @@ function renderBalanceChart(transactions) {
             return null;
           }
           const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-          gradient.addColorStop(0, 'rgba(91, 197, 167, 0.3)');
-          gradient.addColorStop(1, 'rgba(91, 197, 167, 0.05)');
+          gradient.addColorStop(0, 'rgba(2, 69, 141, 0.3)');
+          gradient.addColorStop(1, 'rgba(252, 177, 22, 0.05)');
           return gradient;
         },
         tension: 0.4,
@@ -577,9 +577,9 @@ function renderBalanceChart(transactions) {
           grid: {
             color: function(context) {
               if (context.tick.value === 0) {
-                return '#3a3a3a';
+                return '#FCB116';
               }
-              return '#2a2a2a';
+              return 'rgba(252, 177, 22, 0.2)';
             }
           }
         }
@@ -614,17 +614,17 @@ function renderCategoryTrendChart(transactions) {
   });
   
   const categoryColors = {
-    'Food': 'rgba(255, 101, 47, 0.8)',
-    'Rent': 'rgba(91, 197, 167, 0.8)',
-    'Travel': 'rgba(74, 144, 226, 0.8)',
-    'Misc': 'rgba(155, 89, 182, 0.8)'
+    'Food': 'rgba(255, 118, 35, 0.8)',
+    'Rent': 'rgba(252, 177, 22, 0.8)',
+    'Travel': 'rgba(2, 69, 141, 0.8)',
+    'Misc': 'rgba(255, 118, 35, 0.8)'
   };
   
   const borderColors = {
-    'Food': 'rgba(255, 101, 47, 1)',
-    'Rent': 'rgba(91, 197, 167, 1)',
-    'Travel': 'rgba(74, 144, 226, 1)',
-    'Misc': 'rgba(155, 89, 182, 1)'
+    'Food': 'rgba(255, 118, 35, 1)',
+    'Rent': 'rgba(252, 177, 22, 1)',
+    'Travel': 'rgba(2, 69, 141, 1)',
+    'Misc': 'rgba(255, 118, 35, 1)'
   };
   
   const datasets = allCategories.map(category => ({
@@ -648,7 +648,7 @@ function renderCategoryTrendChart(transactions) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      color: '#b0b0b0',
+      color: '#FCB116',
       interaction: {
         mode: 'index',
         intersect: false
@@ -657,17 +657,17 @@ function renderCategoryTrendChart(transactions) {
         legend: {
           position: 'bottom',
           labels: {
-            color: '#b0b0b0'
+            color: '#FCB116'
           }
         },
         tooltip: {
           mode: 'index',
           intersect: false,
-          backgroundColor: '#2a2a2a',
-          titleColor: '#e0e0e0',
-          bodyColor: '#b0b0b0',
-          borderColor: '#3a3a3a',
-          borderWidth: 1,
+          backgroundColor: '#121826',
+          titleColor: '#FCB116',
+          bodyColor: '#e0e0e0',
+          borderColor: '#FCB116',
+          borderWidth: 2,
           callbacks: {
             label: function(context) {
               return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
